@@ -1,0 +1,6 @@
+FROM nginx
+RUN  apt-get update && apt-get install -y vim iputils-ping \
+    && rm -rf /var/lib/apt/lists/*
+COPY . /usr/share/nginx/html/
+MAINTAINER Ahmed Essam
+EXPOSE 3001:80

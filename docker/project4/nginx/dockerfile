@@ -1,0 +1,5 @@
+FROM nginx
+MAINTAINER Ahmed Essam
+EXPOSE 3003
+WORKDIR /etc/nginx/conf.d
+COPY . .

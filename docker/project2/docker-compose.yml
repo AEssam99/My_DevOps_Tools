@@ -1,0 +1,16 @@
+#version: '2'
+services:
+  flask:
+    build: ./flask/
+    ports:
+      - "5000:5000"
+    container_name: flask_cont
+  nginx:
+    image: my_nginx
+    ports:
+      - "3002:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    container_name: nginx_cont
+    depends_on:
+      - flask
