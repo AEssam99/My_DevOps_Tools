@@ -1,4 +1,4 @@
-# Project 1 – Nginx Static Website (Docker)
+# Project 1 – Nginx Static Website 
 ## Overview
 
 This project demonstrates how to build a custom Docker image based on the official Nginx image to serve a static HTML webpage.
