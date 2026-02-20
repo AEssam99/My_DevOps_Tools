@@ -223,6 +223,8 @@ For production:
 
 - Use Gunicorn instead of Flask development server.
 
+- Custom my_nginx was deployed from project 1.
+
 - Add health checks.
 
 - Implement logging strategy.
