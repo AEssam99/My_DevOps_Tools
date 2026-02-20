@@ -1,0 +1,22 @@
+---
+#Create J2 template and using handlers to restart apache in case of change in j2 file
+
+
+
+- name: Create Template
+  hosts: web
+
+
+  tasks:
+  - name: Template a file, using symbolic modes (equivalent to 0644)
+    ansible.builtin.template:
+      src: templates/index.html.j2
+      dest: /var/www/html/index.html
+    notify: temp_result
+
+  handlers:
+    - name: temp_result
+      ansible.builtin.service:
+        name: httpd
+        state: restarted
+

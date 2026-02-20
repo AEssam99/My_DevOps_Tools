@@ -1,0 +1,33 @@
+---
+#install package
+#start and enable service
+#
+#
+- name: install httpd on all servers
+  hosts: all
+  vars: 
+    - pkg:
+        - httpd
+
+  tasks:
+    - name: install Apache Package
+      ansible.builtin.package:
+        name: "{{ pkg }}"
+        state: present
+
+
+    - name: Enable service httpd
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: yes
+  
+ 
+
+
+ 
+
+
+
+
+

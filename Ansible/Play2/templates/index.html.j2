@@ -1,0 +1,12 @@
+<html>
+  <head><title>Apache from Ansible</title></head>
+  <body>
+    <h1>Server Info</h1>
+    <ul>
+      <li><b>Inventory name:</b> {{ inventory_hostname }}</li>
+      <li><b>Hostname:</b> {{ ansible_hostname }}</li>
+      <li><b>IP Address:</b> {{ ansible_default_ipv4.address }}</li>
+      <li><b>OS:</b> {{ ansible_distribution }} {{ ansible_distribution_version }}</li>
+    </ul>
+  </body>
+</html>
