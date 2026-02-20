@@ -53,11 +53,20 @@ docker ps
 ## Access the Application
 Nginx is exposed on port 3003.
 
-Open in your browser:
+Home:
 
 ```arduino
 http://localhost:3003
 ```
+Flask API (proxied via Nginx):
+
+```arduino
+http://localhost:3003/api/
+http://localhost:3003/api/testdb
+http://localhost:3003/api/users
+```
+
+
 ## Available Endpoints
 ### Home Endpoint
 ```sql
