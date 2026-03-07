@@ -1,0 +1,9 @@
+---
+# defaults file for servers
+users:
+  - devops
+  - auditor
+
+pkg:
+  - vim
+  - curl

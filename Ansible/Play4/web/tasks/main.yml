@@ -1,0 +1,42 @@
+---
+# tasks file for web
+
+  - name: Install httpd service for Centos/Rocky
+    ansible.builtin.package:
+      name: httpd
+      state: present
+    when: ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
+
+  - name: Install apache2 service for Ubunto
+    ansible.builtin.package:
+      name: apache2
+      state: present
+    when: ansible_distribution == "Ubuntu"
+
+# - name: Create index.html using COPY
+#    ansible.builtin.copy:
+#      dest: /var/www/html/index.html
+#      content: |
+#        Server: {{ ansible_hostname }}
+#        OS: {{ ansible_distribution }}
+#        IP: {{ ansible_default_ipv4.address }}
+
+  - name: Create index.html using template
+    ansible.builtin.template:
+      src: temp.j2
+      dest: /var/www/html/index.html
+
+  - name: enable_httpd
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+    when: ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
+
+  - name: enable_apache
+    service:
+      name: apache2
+      state: started
+      enabled: yes
+    when: ansible_distribution == "Ubuntu"
+  

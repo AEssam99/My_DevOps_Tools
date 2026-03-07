@@ -1,0 +1,20 @@
+--- 
+
+- name: Common Configuration for ALL SERVERS
+  hosts: all
+  roles: 
+    - servers
+
+- name: Web Server Configuration
+  hosts: web
+  roles:
+    - web
+
+
+
+- name: DB Server Configuration
+  hosts: db
+  roles:
+    - db
+
+
