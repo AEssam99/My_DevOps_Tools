@@ -1,130 +1,344 @@
-# Ansible Multi-Tier Infrastructure Automation Lab Overview
-This project demonstrates infrastructure automation using Ansible roles to configure a small multi-tier environment consisting of:
-- Common server role
-- Web server role
-- Database server role
-The automation follows Ansible best practices by separating logic into roles and organizing configuration using variables, handlers, templates, and encrypted secrets.
+# Ansible Playbook – Multi-Tier Server Configuration (Play4)
 
-The project simulates a simple production-style architecture where a web server connects to a database server, while all systems receive common security and system configuration.
+This project demonstrates a **production-style Ansible automation setup** using **roles** to configure a multi-tier infrastructure environment.
+
+The playbook automates configuration for three server categories:
+
+* **Base Server Configuration**
+* **Web Server Deployment**
+* **Database Server Deployment**
+
+The environment supports **multiple Linux distributions (Rocky Linux, CentOS, Ubuntu)** and applies **security hardening, package management, web hosting, and database provisioning** using reusable Ansible roles.
+
+---
+
 # Project Architecture
-Example topology used in the lab:
-```sh
-Ansible Control Node
-        │
-        ├── client1  →  Web Server
-        │
-        └── client2  →  Database Server
+
+This project follows the **recommended Ansible roles structure** to ensure modularity and scalability.
+
 ```
-# Repository Structure
-```sh
-play4/
+Play4
 │
 ├── ansible.cfg
 ├── inventory
 ├── playbook4.yaml
+├── README.md
 │
-├── db/
-│   ├── defaults/
+├── servers
+│   ├── defaults
 │   │   └── main.yml
-│   └── tasks/
+│   ├── handlers
+│   │   └── main.yml
+│   └── tasks
 │       └── main.yml
 │
-├── servers/
-│   ├── defaults/
+├── web
+│   ├── defaults
 │   │   └── main.yml
-│   ├── handlers/
+│   ├── tasks
 │   │   └── main.yml
-│   └── tasks/
-│       └── main.yml
-│
-├── web/
-│   ├── defaults/
-│   │   └── main.yml
-│   ├── tasks/
-│   │   └── main.yml
-│   └── templates/
+│   └── templates
 │       └── temp.j2
 │
-└── README.md
+└── db
+    ├── defaults
+    │   └── main.yml
+    └── tasks
+        └── main.yml
 ```
-# Roles Description
-## 1. Servers Role
 
-This role applies common configuration to all managed hosts.
+Each role is responsible for configuring a specific layer of the infrastructure.
 
-### Tasks
+---
 
-- Install common packages (vim, curl)
+# Infrastructure Roles
 
-- Create system users (devops, auditor)
+## 1️⃣ Servers Role (Base System Configuration)
 
-- Configure SSH public key authentication
+The **servers role** prepares all hosts with common system configuration and security hardening.
 
-- Disable root SSH login
+This role ensures that all servers:
 
-- Disable password authentication
+* Have required packages installed (vim, curl)
+* Have standardized user accounts (devops, auditor)
+* Use SSH key authentication
+* Disable insecure SSH access methods
 
-### Handlers
+### Package Installation
 
-- Restart SSH service when SSH configuration changes.
+Packages defined in the defaults file are installed using a loop.
 
-### Variables
-Defined in:
-```sh
-servers/dafaults/main.yml
+```yaml
+- name: Install packages {{pkg}}
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ pkg }}"
 ```
-## 2. Web Role
 
-The web role installs and configures the web server depending on the operating system.
+---
 
-### Supported systems
+### User Provisioning
 
-- Ubuntu → apache2
+Multiple system users are created automatically.
 
-- CentOS / Rocky Linux → httpd
-
-### Tasks
-
-- Install the appropriate web server package
-
-- Start and enable the service
-
-- Deploy a dynamic web page using a Jinja2 template
-
-### Template
-```sh
-web/templates/temp.j2
+```yaml
+- name: Create multiple users
+  ansible.builtin.user:
+    name: "{{ item }}"
+    shell: /bin/bash
+    create_home: true
+    groups: wheel
+    append: yes
+  loop: "{{ users }}"
 ```
-The template dynamically displays:
 
-- Hostname
+Users are granted **sudo privileges** by adding them to the **wheel group**.
 
-- Operating System
+---
 
-- Server IP Address
+### SSH Key Authentication
 
-This demonstrates the use of Ansible facts and templating.
+Each user receives the controller node's SSH public key to allow secure login.
 
-## 3. DB Role
-
-The db role installs and configures MariaDB database server.
-
-### Tasks
-
-- Install MariaDB server
-
-- Start and enable MariaDB service
-
-- Create a database
-
-- Create a database user
-
-- Assign privileges to the user
-
-### Database variables are defined in:
-```sh
-db/defaults/main.yml
+```yaml
+- name: Add SSH public key to each user
+  ansible.posix.authorized_key:
+    user: "{{item}}"
+    state: present
+    key: "{{ lookup('file', '/home/aessam/.ssh/id_rsa.pub') }}"
+  loop: "{{users}}"
 ```
+
+This ensures:
+
+* Passwordless SSH login
+* Secure automation access
+
+---
+
+### SSH Hardening
+
+Root login is disabled to prevent direct administrative access.
+
+```yaml
+- name: Disable direct root SSH login
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: ^(#\s*)?PermitRootLogin
+    line: PermitRootLogin no
+    validate: '/usr/sbin/sshd -t -f %s'
+  notify: Restart_SSH
+```
+
+Password authentication is also disabled.
+
+```yaml
+- name: Disable Password Auth
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: ^(#\s*)?PasswordAuthentication
+    line: PasswordAuthentication no
+    validate: '/usr/sbin/sshd -t -f %s'
+  notify: Restart_SSH
+```
+
+Any SSH configuration change triggers the handler:
+
+```yaml
+Restart_SSH
+```
+
+which restarts the SSH service safely.
+
+---
+
+# 2️⃣ Web Role (Web Server Deployment)
+
+The **web role** installs and configures a web server depending on the operating system.
+
+Supported distributions:
+
+* Rocky Linux
+* CentOS
+* Ubuntu
+
+---
+
+## Web Server Installation
+
+For **Rocky Linux / CentOS**, Apache HTTPD is installed:
+
+```yaml
+- name: Install httpd service for Centos/Rocky
+  ansible.builtin.package:
+    name: httpd
+    state: present
+  when: ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
+```
+
+For **Ubuntu**, Apache2 is installed:
+
+```yaml
+- name: Install apache2 service for Ubunto
+  ansible.builtin.package:
+    name: apache2
+    state: present
+  when: ansible_distribution == "Ubuntu"
+```
+
+---
+
+## Dynamic Web Page Deployment
+
+The role uses **Jinja2 templates** to generate a dynamic web page that displays server information.
+
+Template deployment:
+
+```yaml
+- name: Create index.html using template
+  ansible.builtin.template:
+    src: temp.j2
+    dest: /var/www/html/index.html
+```
+
+Example template content:
+
+```
+Server: {{ ansible_hostname }}
+OS: {{ ansible_distribution }}
+IP: {{ ansible_default_ipv4.address }}
+```
+
+This allows each server to automatically generate its own web page with runtime system information.
+
+---
+
+## Web Service Management
+
+The web server service is enabled and started automatically.
+
+For **Rocky/CentOS**:
+
+```yaml
+- name: enable_httpd
+  service:
+    name: httpd
+    state: started
+    enabled: yes
+```
+
+For **Ubuntu**:
+
+```yaml
+- name: enable_apache
+  service:
+    name: apache2
+    state: started
+    enabled: yes
+```
+
+---
+
+# 3️⃣ Database Role (MariaDB Deployment)
+
+The **db role** automates installation and configuration of a MariaDB database server.
+
+The role performs:
+
+* MariaDB installation
+* Database service management
+* Python MySQL dependency installation
+* Database creation
+* Database user creation with privileges
+
+---
+
+## MariaDB Installation
+
+```yaml
+- name: Install mariadb package
+  ansible.builtin.package:
+    name:
+      - mariadb
+      - mariadb-server
+    state: present
+```
+
+---
+
+## Start and Enable Database Service
+
+```yaml
+- name: enable and start mariadb
+  ansible.builtin.service:
+    name: mariadb
+    state: started
+    enabled: yes
+```
+
+---
+
+## Python Dependency Installation
+
+Ansible's MySQL modules require **PyMySQL**.
+
+```yaml
+- name: Install PyMySQL for mysql module
+  ansible.builtin.package:
+    name:
+      - python3-PyMySQL.noarch
+    state: present
+```
+
+---
+
+## Database Creation
+
+The database name is defined in the role variables.
+
+Rocky/CentOS socket path:
+
+```yaml
+login_unix_socket: /var/lib/mysql/mysql.sock
+```
+
+Ubuntu socket path:
+
+```yaml
+login_unix_socket: /run/mysqld/mysqld.sock
+```
+
+Example task:
+
+```yaml
+- name: Create new databases
+  community.mysql.mysql_db:
+    name: "{{ db_name }}"
+    state: present
+```
+
+---
+
+## Database User Creation
+
+A dedicated database user is created and granted full privileges on the database.
+
+```yaml
+- name: Create database user
+  community.mysql.mysql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    priv: '{{ db_name }}.*:ALL'
+    state: present
+```
+
+This allows application services to securely interact with the database.
+
+---
+
+### Database variables 
+
 ```yaml
 ---
 # defaults file for db
@@ -137,55 +351,61 @@ Sensitive credentials can be protected using Ansible Vault.
 ```sh
 ansible-vault encrypt db/defaults/main
 ```
-## Main Playbook
 
-The main playbook:
-```sh
-playbook4.yaml
-```
-It orchestrates the deployment by applying roles to the appropriate host groups:
-```sh
-Host Group |	Role  |
-───────────|──────────|
-all	       | servers  |
-───────────|──────────|
-web	       | web      |
-───────────|──────────|
-db	       |db        |
-───────────└──────────|
-```
-## Running the Project
-1. Clone the repository
-```sh
-git clone https://github.com/AEssam99/My_DevOps_Tools.git
-cd Ansible/Play4
-```
-2. Verify connectivity
-```sh
-ansible all -m ping
-```
-3. Run the playbook
+--- 
+
+# Playbook Execution
+
+To run the full infrastructure configuration:
+
 ```sh
 ansible-playbook playbook4.yaml --ask-vault-pass
 ```
 `Note`
-As we have encrypted file at db role using Ansible-Vault so we used:
+As we have an encrypted file at db role using Ansible-Vault so we used:
 ```sh
 --ask-vault-pass
 ```
-## Skills Demonstrated
-This project demonstrates practical DevOps and Infrastructure Automation skills:
 
-- Ansible Roles
-- Infrastructure as Code (IaC)
-- Configuration Management
-- Secure secrets management with Ansible Vault
-- Jinja2 templating
-- Linux server automation
-- Multi-tier architecture deployment
+This will sequentially execute:
 
-## Author
-DevOps Engineer in training focusing on:
-- Linux System Administration
-- Infrastructure Automation
-- SysAdmin & DevOps Engineering
+1. **servers role** on all hosts
+2. **web role** on web servers
+3. **db role** on database servers
+
+---
+
+# Skills Demonstrated
+
+This project demonstrates several core **DevOps and Automation skills**:
+
+* Infrastructure as Code (IaC)
+* Ansible Role-Based Architecture
+* Linux System Automation
+* SSH Hardening
+* Multi-distribution Package Management
+* Apache Web Server Deployment
+* MariaDB Database Provisioning
+* Dynamic Configuration using Jinja2 Templates
+* Idempotent Infrastructure Design
+
+---
+
+# Future Improvements
+
+Potential enhancements for this project:
+
+* Implement **Ansible Vault** for database credentials
+* Add **firewall automation (firewalld / ufw)**
+* Add **Nginx role**
+* Add **Load Balancer role**
+* Add **Dockerized services**
+* Integrate with **CI/CD pipelines**
+
+---
+
+# Author
+
+Ahmed Essam
+DevOps / System Administration Enthusiast
+
