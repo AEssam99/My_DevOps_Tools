@@ -12,12 +12,10 @@ More playbooks will be added as the automation journey continues.
 ## 📁 Project Structure
 ```java
 ansible/
-├── ansible.cfg
-├── inventory
-├── playbook1.yml
-├── playbook2.yml
-├── playbook3.yml
-└── (more plays coming soon...)
+├── Play1
+├── Play2
+├── Play3
+└── Play4
 ```
 
 ## 🖥 Inventory Configuration
@@ -35,7 +33,7 @@ client2
 - **db group** → Used for database server related tasks
 
 
-## ⚙️ Ansible Configuration (ansible.cfg)
+## ⚙️ Ansible Configuration (ansible.cfg) for all projects
 ```yaml
 [defaults]
 inventory=./inventory
@@ -61,9 +59,9 @@ become=true
 ## 🚀 Running Playbooks
 
 To run a playbook:
-
+For example playbook1.yaml
 ```bash
-ansible-playbook playbook1.yml
+ansible-playbook playbook1.yaml
 ```
 To target a specific group:
 
@@ -83,7 +81,6 @@ ansible all -m ping
 
 - Multiple playbooks for automation tasks
 
-## 🔮 Upcoming Additions
 - More playbooks for advanced automation
 
 - Role-based structure
@@ -104,3 +101,4 @@ ansible all -m ping
 - Linux Servers
 
 - SSH-based Automation
+
