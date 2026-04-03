@@ -1,0 +1,19 @@
+name: Matrix Strategy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  job1:
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        vars: [Var1, Var2, Var3]
+    steps:
+      - name: Print Runner OS
+        run: |
+          echo "$matrix.vars"
+          echo "The Runner OS is ${{runner.os}}"
+      
+    

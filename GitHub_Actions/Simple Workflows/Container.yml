@@ -1,0 +1,22 @@
+name: Run job inside container and add warning steps
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    container:
+      image: alpine:latest
+    steps:
+      - name: Check OS
+        run: cat /etc/os-release
+
+      - name: Run Warning
+        run: |
+          if [[true]]; then
+          echo "::warning:: We are running inside a container"
+          fi
+    
+    
+    

@@ -1,0 +1,14 @@
+name: Push WF
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print the job
+        run: echo "Job ${{github.job}} is Done"
+    

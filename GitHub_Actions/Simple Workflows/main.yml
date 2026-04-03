@@ -1,0 +1,28 @@
+name: Control execution order
+
+on:  
+  workflow_dispatch:
+
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+      - name: Create a variable
+        run: echo "My_Var=1234" >> $GITHUB_ENV
+      - name: Print Job1
+        if: success()
+        run: |
+          echo "The variable equals to $My_Var"
+          echo "Job: ${{github.job}}"
+  job2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+      - name: Print Job2
+        run: | 
+          echo "Job: ${{github.job}}"
+    needs: job1
+      

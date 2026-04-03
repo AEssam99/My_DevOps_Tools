@@ -1,0 +1,22 @@
+name: Manual Workflow with Input
+
+on: 
+  workflow_dispatch:
+    inputs:
+      Environment:
+        required: true
+        default: Test
+        description: Production Environment  
+        type: choice
+        options:
+          - Test
+          - Production
+
+jobs:
+  Job1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print Env Var
+        run: echo "You have selected ${{ inputs.Environment }} Environment"
+ 
+  
