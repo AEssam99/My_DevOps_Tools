@@ -27,9 +27,13 @@ My_DevOps_Tools
 │   ├── Project4
 │   └── README.md
 │
+├── CI-CD/
+│   └── GitHub-Actions  
+│       ├── Simple Workflows
+│       └── README.md           
+|
 ├── Kubernetes/        (Upcoming)
 ├── Terraform/         (Upcoming)
-├── CI-CD/             (Upcoming)
 ├── Cloud/             (Upcoming)
 │   ├── AWS
 │   └── Azure
@@ -85,7 +89,7 @@ This repository gradually covers **key technologies used in modern DevOps enviro
   * Multi-cloud deployments
   * Modular infrastructure architecture
 
-## 🔄 CI/CD Pipelines (Upcoming)
+## 🔄 CI/CD Pipelines 
 
 * GitHub Actions
 * Jenkins
